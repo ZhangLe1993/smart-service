@@ -1,6 +1,8 @@
 package com.biubiu.user.thrift;
 
+import com.biubiu.thrift.message.MessageService;
 import com.biubiu.thrift.user.UserService;
+import org.apache.thrift.TServiceClient;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TFramedTransport;
@@ -19,14 +21,34 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServiceProvider {
 
-    @Value("${thrift.user.service.ip}")
-    private String serverIp;
+    @Value("${thrift.user.service.host}")
+    private String serverHost;
 
     @Value("${thrift.user.service.port}")
     private int serverPort;
 
+
+    @Value("${thrift.message.service.host}")
+    private String messageServiceHost;
+
+    @Value("${thrift.message.service.port}")
+    private int messageServicePort;
+
+    private enum ServiceType {
+        User,
+        Message
+    }
+
     public UserService.Client getUserService() {
-        TSocket socket = new TSocket(serverIp, serverPort, 3000);
+        return getService(serverHost, serverPort, ServiceType.User);
+    }
+
+    public MessageService.Client getMessageService() {
+        return getService(messageServiceHost, messageServicePort, ServiceType.User);
+    }
+
+    public <T> T getService(String serviceHost, int servicePort, ServiceType serviceType) {
+        TSocket socket = new TSocket(serviceHost, servicePort, 3000);
         TTransport transport = new TFramedTransport(socket);
 
         try {
@@ -38,9 +60,15 @@ public class ServiceProvider {
 
         TProtocol protocol = new TBinaryProtocol(transport);
 
-        UserService.Client client = new UserService.Client(protocol);
-
-
-        return client;
+        TServiceClient client = null;
+        switch (serviceType) {
+            case User:
+                client = new UserService.Client(protocol);
+                break;
+            case Message:
+                client = new UserService.Client(protocol);
+                break;
+        }
+        return (T) client;
     }
 }

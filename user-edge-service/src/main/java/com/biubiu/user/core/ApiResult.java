@@ -16,6 +16,8 @@ public class ApiResult implements Serializable {
 
 
     public ApiResult() {
+        this.code = 200;
+        this.message = "success";
     }
 
     public ApiResult(int code, String message) {
@@ -37,5 +39,9 @@ public class ApiResult implements Serializable {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public static ApiResult exception(Exception e) {
+        return new ApiResult(9999, e.getMessage());
     }
 }
